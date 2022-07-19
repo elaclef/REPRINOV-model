@@ -1,0 +1,17 @@
+param_nom;param_val;param_def
+CH4_mbat_fe;5.1;methane emission factor manure stock bat
+CH4_mpat_fe;0.6;methane emission factor dej pat
+AWMS_bat;0.21;fraction of total volatil solid managed in bat
+AWMS_pat;0.78;fraction of total volatil solid managed at pasture
+fe_elec;0.308;emission factor per Kwh consumed in kg CO2eq/kwh
+fe_input;0.655;emission factor in kg of CO2 eq per Kg of input
+to_N2O_C;298.00;change from t N2O to teq CO2
+to_CH4_C;25.00;from tCH4 to teq CO2
+to_CO2_C;1.0;from tCO2 to teq CO2C
+ym;0.067;methane conversion factor for gross energy in feed
+GE_rams;6509.0;Gross energy
+GE_young;11895.0;Gross energy
+GE_adult;18667.0;Gross energy
+mean_nrj_consum_per_l;0.64;nrj consumption to produce 1 L of milk
+daily_water_consum;500.0;average water consumption
+fe_forage_bought;0.2;ref value
