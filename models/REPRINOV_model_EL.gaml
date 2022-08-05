@@ -50,13 +50,13 @@ global {
 //////Loading all external source files///////
 	csv_file data2 <- csv_file("../includes/ROQ/Management_dates.csv", ";", true);
 	csv_file data3 <- csv_file("../includes/ROQ/All_parametersvalues.csv", ";", true);
-	file data_grazing_periods <- csv_file("../includes/ROQ1/Grazing_periods.csv", ";", true);
+	file data_grazing_periods <- csv_file("../includes/ROQ/Grazing_periods.csv", ";", true);
 	file data_diet <- csv_file("../includes/ROQ/Diets.csv", ";", true);
 	file data_feed <- csv_file("../includes/ROQ/Feed.csv", ";", true);
 	file data_surfaces <- csv_file("../includes/ROQ/Yields.csv", ";", true); // surface file
-	file data_eco_loads <- csv_file("../includes/ROQ/Eco_Loads.csv", ";", true); //charges
-	file data_eco_products <- csv_file("../includes/ROQ/Eco_Products.csv", ";", true); //produits
-	file data_eco_subsidies <- csv_file("../includes/ROQ/Eco_Subsidies.csv", ";", true); //subventions
+	file data_eco_loads <- csv_file("../includes/ROQ/Eco_Loads.csv", ";", true); //loads
+	file data_eco_products <- csv_file("../includes/ROQ/Eco_Products.csv", ";", true); //products
+	file data_eco_subsidies <- csv_file("../includes/ROQ/Eco_Subsidies.csv", ";", true); //subsidies
 	file data_parameters_GHG <- csv_file("../includes/ROQ/Enviro_parametres.csv", ";", true);
 	file data_type_surfaces <- csv_file("../includes/ROQ/Surfaces_used.csv", ";", true);
 	//loading the diets file for the concerned farm
@@ -94,7 +94,7 @@ global {
 	geometry background_rams;
 	geometry background_breeder;
 
-	//Caractéristiques Générales du système à renseigner //
+	//General characteristics of the system to be filled in//
 	date starting_date <- date(2016, 6, 9);
 	float step <- 12 #hours;
 	bool AI <- true parameter: "AI" category: "Reproduction management";
@@ -1112,22 +1112,22 @@ species ewe parent: sheep {
 
 	reflex being_cyclic_before_male_effect when: not hormon_shot and age >= 1 and not culling_for_age and not culling_for_perf and (current_date =my_farmer.ram_introduction) and
 	in_anoestrus {
-		if (my_farmer.mating_period = "hatif" and (BCS <= 2.0)) {
+		if (my_farmer.mating_period = "early" and (BCS <= 2.0)) {
 			proba_cyclic <-
 			exp(0.007 * estimated_total_milk_production + 0.102 * age + 0.008 * days_since_lambing - 0.001 * last(Ctl) - 2.723) / (1 + exp(0.007 * estimated_total_milk_production + 0.102 * age + 0.008 * days_since_lambing - 0.001 * last(Ctl) - 2.723));
 		}
 
-		if (my_farmer.mating_period = "hatif" and BCS > 3.0) {
+		if (my_farmer.mating_period = "early" and BCS > 3.0) {
 			proba_cyclic <-
 			exp(1.204 + 0.007 * estimated_total_milk_production + 0.102 * age + 0.008 * days_since_lambing - 0.001 * last(Ctl) - 2.723) / (1 + exp(1.204 + 0.007 * estimated_total_milk_production + 0.102 * age + 0.008 * days_since_lambing - 0.001 * last(Ctl) - 2.723));
 		}
 
-		if (my_farmer.mating_period = "hatif" and BCS between (2.0, 3.1)) {
+		if (my_farmer.mating_period = "early" and BCS between (2.0, 3.1)) {
 			proba_cyclic <-
 			exp(0.585 + 0.007 * estimated_total_milk_production + 0.102 * age + 0.008 * days_since_lambing - 0.001 * last(Ctl) - 2.723) / (1 + exp(0.585 + 0.007 * estimated_total_milk_production + 0.102 * age + 0.008 * days_since_lambing - 0.001 * last(Ctl) - 2.723));
 		}
 
-		if (my_farmer.mating_period = "tardif") {
+		if (my_farmer.mating_period = "late") {
 			if (current_date.month between (5, 9)) {
 				proba_cyclic <- 0.8;
 			}
@@ -1534,9 +1534,9 @@ species farmer {
 		ram_introduction <- date(string(dates[2, 0]) split_with ",");
 		sponge <- date(string(dates[2, 2]) split_with ",");
 		if ((ram_introduction.month between (1, 6)) or sponge.month between (1, 6)) {
-			mating_period <- "hatif";
+			mating_period <- "early";
 		} else {
-			mating_period <- "tardif";
+			mating_period <- "late";
 		}
 
 		write sample(mating_period);
@@ -1644,11 +1644,11 @@ species farmer {
 	}
 	
 		list<list<date>> calcul_insemination_dates {
-		if (mating_period = "hatif") {
+		if (mating_period = "early") {
 			return [[ram_introduction add_days 17, ram_introduction add_days 21], [ram_introduction add_days 23, ram_introduction add_days 27]];
 		}
 
-		if (mating_period = "tardif") {
+		if (mating_period = "late") {
 			return [[ram_introduction add_days 16, ram_introduction add_days 20], [ram_introduction add_days 19, ram_introduction add_days 23]];
 		}
 
@@ -2013,7 +2013,7 @@ species farmer {
 	
 	reflex calcul_TMP_of_the_herd when: current_date = end_delivery_date {
 		ewe_that_produced <- ewe where (each.producing_ewe);
-		write " effectif brebis qui ont produit:" + length(ewe_that_produced) + " flock size:" + (flock_size_current_production_season[production_season_number]) color:#purple;
+		write " number of ewes that produced:" + length(ewe_that_produced) + " flock size:" + (flock_size_current_production_season[production_season_number]) color:#purple;
 		htmp[production_season_number] <- (ewe_that_produced sum_of (sum(each.milk_prod[each.lact_num])));
 		write current_date+ scenario +"production season: "+ production_season_number+"Total_prod of flock (L):" + htmp[production_season_number] color: #green;
 		write "TMP mean (L/ewe):" + (ewe_that_produced mean_of (sum(each.milk_prod[each.lact_num])));
