@@ -2123,12 +2123,6 @@ species feed {
 	int size_batch_7;
 	int size_batch_8;
 	int size_batch_9;
-	float MS;
-	float UE;
-	float UF;
-	float PDIN;
-	float PDIE;
-	float PDI;
 	float refus;
 	float daily_PDIN_intake;
 	float daily_PDIE_intake;
@@ -2142,27 +2136,11 @@ species feed {
 	//find the feed name corresponding to the feed type
 		feed_name <- string(mat_alim[1, (feed_type) - 1]);
 		feed_category <- string(mat_alim[10, (feed_type) - 1]);
-		MS <- float(mat_alim[3, (feed_type) - 1]);
-		UF <- float(mat_alim[5, (feed_type) - 1]);
-		PDIN <- float(mat_alim[6, (feed_type) - 1]);
-		PDIE <- float(mat_alim[7, (feed_type) - 1]);
-		PDI <- float(mat_alim[8, (feed_type) - 1]);
-
 		// find the beginning and the end of period of the diet 
 		deb_period <- date(string(mat_periodes[1, diet_period - 1]) split_with ",");
 		end_period <- date(string(mat_periodes[2, diet_period - 1]) split_with ",");
 		//write "nom alim:" + feed_name + " deb_period:" + deb_period + " End_period" + end_period;
-		if (feed_category = "concentrates") {
-			daily_energy_intake <- UF * feed_qty * MS;
-			daily_PDIN_intake <- PDIN * feed_qty * MS;
-			daily_PDIE_intake <- PDIE * feed_qty * MS;
-		}
-
-		if (feed_category != "concentrates") {
-			daily_energy_intake <- UF * feed_qty;
-			daily_PDIN_intake <- PDIN * feed_qty;
-			daily_PDIE_intake <- PDIE * feed_qty;
-		}
+	
 
 	}
 
