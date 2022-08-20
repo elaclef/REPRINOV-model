@@ -1,5 +1,5 @@
 # REPRINOV-model
-Script of the agent-based model (ABM) described by Laclef et al. (2022) in the article entitled "Modelling the long-term consequences of implementing hormone-free reproductive management on the sustainability of a dairy sheep farm" (Under review)
+Script of the agent-based model (ABM) described by Laclef et al. (under review) in the article entitled "Modelling the long-term consequences of implementing hormone-free reproductive management on the sustainability of a dairy sheep farm" 
 
 This agent-based dairy sheep flock model was implemented with the GAMA software (V1.8.0) http://gama-platform.org.
 The "includes" folder provides a set of csv format input files needed to run the simulations. The data contained in this folder are dummies and do not correspond to the data treated in the article by Laclef et al. (2022)
