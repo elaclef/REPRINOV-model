@@ -1079,9 +1079,11 @@ species ewe parent: sheep {
 
 	}
 
-	reflex calcul_mean_age_renewal_lambs when: renew and current_date = my_farmer.ram_introduction and cycle != 0 {
-		age_at_repro <- (current_date - birth_date) / #month;
-	}
+	reflex calcul_mean_age_renewal_lambs when: renew and current_date.year!=starting_date.year and ((hormon_shot_youngs and current_date =my_farmer.ewelamb_AI_date_with_hormone) or (not hormon_shot_youngs and current_date = my_farmer.ewe_lamb_start_mating_date)) {
+		age_at_repro<-(current_date-birth_date)/#month;
+		//write current_date + name +sample(age_at_repro);
+		
+	}  
 
 	reflex ewelamb_entering_in_heat when: (((not hormon_shot_youngs and renew) or (latecomer)) and (not first_heat and in_anoestrus and not gestating)) and
 	((current_date = my_farmer.ewe_lamb_start_mating_date add_days day_of_first_heat_ewelamb)) {
@@ -1646,6 +1648,9 @@ species farmer {
 			write sample(nb_renew_ram) color: #red;
 		}
 
+	}
+	
+	reflex other_dates_and_indicators_update2 when: current_date = ewe_lamb_start_mating_date {
 		repro_age_of_ewe_lambs <- mean(((ewe where (each.renew)) collect (each.age_at_repro)));
 		write sample(repro_age_of_ewe_lambs) color: #red;
 	}
