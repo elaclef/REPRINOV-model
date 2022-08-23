@@ -10,7 +10,7 @@ model REPRINOV
 // GLOBAL ATTRIBUTS AND PARAMETERS
 //----------------------------------------------------------------------------
 global {
-	string scenario <- "scenar0";
+	string scenario <- "scenar1";
 	bool transition <- false;
 	bool end_simulation <- false;
 	///////////////////////////////////////////	
@@ -27,7 +27,7 @@ global {
 			transition <- true;
 			//write current_date + scenario color: #purple;
 			AI <- true;
-			AI_youngs <- true;
+			AI_youngs <- false;
 			hormon_shot <- false;
 			hormon_shot_youngs <- false;
 			male_female_ratio <- 1 / 30;
@@ -837,17 +837,7 @@ species sheep {
 			do die;
 		} else {
 			weaned <- true;
-			if (ewe_autorenewal and int(length(ewe where (each.newborn and each.weaned and each.renew))) < my_farmer.nb_renew_ewe) {
-				renew <- true;
-			}
-
-			if (ram_autorenewal and int(length(ram where (each.newborn and each.weaned and each.renew))) < my_farmer.nb_renew_ram) {
-				renew <- true;
-			}
-
-		}
-
-	}
+		} }
 
 	rgb couleur {
 		return #white;
@@ -881,6 +871,10 @@ species ram parent: sheep {
 
 	reflex udpdate_nutri_state when: nutrition_state = "growing_male" and age = 0 {
 		nutrition_state <- "male";
+	}
+	
+	reflex auto_renewal_ram when:ram_autorenewal and weaned and (length(ram where (each.newborn and each.weaned and each.renew)) < my_farmer.nb_renew_ram){
+		renew <- true;
 	}
 
 	reflex water_consumption_of_males when: every(#day) {
@@ -1047,6 +1041,9 @@ species ewe parent: sheep {
 			BCS <- BCS + 0.2;
 		}
 
+	}
+	reflex auto_renewal_ewe when:ewe_autorenewal and weaned and (length(ewe where (each.newborn and each.weaned and each.renew)) < my_farmer.nb_renew_ewe){
+		renew <- true;
 	}
 
 	///////////////////////////////water consum////////////////////////
@@ -1645,6 +1642,18 @@ species farmer {
 			}
 
 			nb_renew_ram <- int(1 / 3 * length(ram));
+			
+			create ram number: 3 {
+				my_farmer <- myself;
+				my_farmer.my_rams << self;
+				newborn <- false;
+				age <- 0;
+				father_index <- rnd(80, 120);
+				state <- "male";
+				renew <- true;
+				weaned<-true;
+			}
+			
 			write sample(nb_renew_ram) color: #red;
 		}
 
@@ -1660,11 +1669,11 @@ species farmer {
 	}
 
 	list<list<date>> calcul_insemination_dates {
-		if (mating_period = "hatif") {
+		if (mating_period = "early") {
 			return [[ram_introduction add_days 17, ram_introduction add_days 21], [ram_introduction add_days 23, ram_introduction add_days 27]];
 		}
 
-		if (mating_period = "tardif") {
+		if (mating_period = "late") {
 			return [[ram_introduction add_days 16, ram_introduction add_days 20], [ram_introduction add_days 19, ram_introduction add_days 23]];
 		}
 
@@ -1912,6 +1921,7 @@ species farmer {
 				state <- "in anoestrus";
 				nutrition_state <- "growing_male";
 			}
+			
 
 		}
 
