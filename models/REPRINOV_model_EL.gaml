@@ -695,7 +695,7 @@ global {
 		///////////////--------------CO2
 		// nergy consumption of the dairy sheep workshop
 		CO2_emissions_elec <- nrj_conso * fe_elec;
-		CO2_emissions_feed_input <- (concentrates_distributed * fe_input + forage_bought * fe_forage_input) * 10 ^ 3;
+		CO2_emissions_feed_input <- ((concentrates_distributed+grain_bought) * fe_input + forage_bought * fe_forage_input) * 10 ^ 3;
 		//calculation of C02 emissions from the purchase of concentrates;10^3 to pass qty of concentrates and forage purchased in kg 
 
 		///////////////----------WATER
@@ -1085,7 +1085,7 @@ species ewe parent: sheep {
 	reflex ewelamb_entering_in_heat when: (((not hormon_shot_youngs and renew) or (latecomer)) and (not first_heat and in_anoestrus and not gestating)) and
 	((current_date = my_farmer.ewe_lamb_start_mating_date add_days day_of_first_heat_ewelamb)) {
 		if (current_date.month between (2, 7)) {
-			first_heat <- flip(0.5);
+			first_heat <- flip(0.2);
 		}
 		/*It seems that ewe lambs come into heat less in the spring than in the summer, but this value must be adjusted according to field observations */
 		if (current_date.month between (6, 9)) {
@@ -1631,6 +1631,7 @@ species farmer {
 
 		if (transition and production_season_number = 2) {
 			write current_date + sample(transition) color: #pink;
+			ewe_lamb_start_mating_date<-ewelamb_AI_date_with_hormone;
 			create ram number: 8 {
 				my_farmer <- myself;
 				my_farmer.my_rams << self;
@@ -1711,7 +1712,6 @@ species farmer {
 				to_be_inseminate <- true;
 			}
 
-			nb_of_insemination <- nb_ewe_to_be_insem1;
 		}
 
 		if (hormon_shot_youngs) {
@@ -1721,7 +1721,6 @@ species farmer {
 				to_be_inseminate <- true;
 			}
 
-			nb_of_insemination <- nb_ewe_to_be_insem1 + nb_ewelamb_to_be_insem1;
 		} else {
 			ask (ewe) {
 				to_be_inseminate <- true;
@@ -1734,6 +1733,7 @@ species farmer {
 	reflex inseminates_without_hormones when: AI and not hormon_shot and not empty(AI_dates where (current_date between (each[0], each[1]))) {
 		list<ewe> brebis_pouvant_etre_gestantes <- ewe where (each.to_be_inseminate and each.in_heat);
 		/*This reflex must occur after the first AI */
+		
 		nb_ewe_to_be_insem2 <- int(detection_rate * length(brebis_pouvant_etre_gestantes));
 		ask (nb_ewe_to_be_insem2 among brebis_pouvant_etre_gestantes) {
 			gestating <- flip(proba_AI_sucess);
@@ -1762,9 +1762,10 @@ species farmer {
 	}
 
 	reflex inseminates_ewes_with_hormone when: AI and hormon_shot and (current_date = ewe_AI_date_with_hormone) {
-		list<ewe> brebis_candidates_a_gestation <- ewe where (each.age >= 1 and (each.to_be_inseminate) and (each.in_heat));
+		list<ewe> ewes_candidates_to_gestation <- ewe where (each.age >= 1 and (each.to_be_inseminate) and (each.in_heat));
 		/* must occur after the first AI */
-		ask (brebis_candidates_a_gestation) {
+		nb_of_insemination<-length(ewes_candidates_to_gestation);
+		ask (ewes_candidates_to_gestation) {
 			gestating <- flip(proba_AI_sucess);
 			to_be_inseminate <- false;
 			if (gestating) {
@@ -1787,9 +1788,10 @@ species farmer {
 	}
 
 	reflex inseminates_youngs_with_hormone when: AI_youngs and hormon_shot_youngs and (current_date = ewelamb_AI_date_with_hormone) {
-		list<ewe> agnelles_candidates_a_gestation <- ewe where (each.renew and each.to_be_inseminate and each.in_heat); /*Cette étape 
+		list<ewe> ewelambs_candidates_to_gestation <- ewe where (each.renew and each.to_be_inseminate and each.in_heat); /*Cette étape 
 		 * doit avoir lieu après la 1ère IA */
-		ask (agnelles_candidates_a_gestation) {
+		 nb_of_insemination<-nb_of_insemination+length(ewelambs_candidates_to_gestation);
+		ask (ewelambs_candidates_to_gestation) {
 			gestating <- flip(young_proba_AI_sucess);
 			to_be_inseminate <- false;
 			if (gestating) {
