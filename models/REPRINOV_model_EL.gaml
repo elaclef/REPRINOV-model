@@ -1010,6 +1010,7 @@ species ewe parent: sheep {
 	int lact_num;
 	int day_of_first_heat;
 	int day_of_first_heat_ewelamb <- rnd(0, 17);
+	int second_chance_at_first_heat<-rnd(0, 60);
 	int day_of_first_heat_with_AI <- 2;
 	int gestation_duration <- int(min(157.0, max(145.0, gauss(147.0, 5.0)))); /* gestation duration is between 147 and 157 j */
 	int day_of_abortion <- rnd(5, 140);
@@ -1102,6 +1103,34 @@ species ewe parent: sheep {
 			in_anoestrus <- false;
 			state <- "in heat";
 			latecomer <- false;
+			number_of_ewelamb_starting_heating <- number_of_ewelamb_starting_heating + 1;
+		}
+
+		if (nutrition_state = "growing") {
+			nutrition_state <- "maintenance";
+		}
+
+	}
+	
+	reflex ewelamb_entering_in_heat2 when: (((not hormon_shot_youngs and renew) or (latecomer)) and (not first_heat and in_anoestrus and not gestating)) and 
+	(current_date =  my_farmer.ewe_lamb_start_mating_date add_days second_chance_at_first_heat) {
+		
+		/*It seems that ewe lambs come into heat less in the spring than in the summer, but this value must be adjusted according to field observations */
+		if (current_date.month between (6, 9) ) {
+			first_heat <- flip(0.8);
+		}
+
+		if ((current_date.month = 9 or current_date.month = 10 or current_date.month = 11 or current_date.month = 12) and (current_date = my_farmer.ewe_lamb_start_mating_date add_days day_of_first_heat_ewelamb)) {
+			first_heat <- flip(0.95);
+		}
+
+		if (first_heat) {
+			start_heating <- current_date;
+			in_heat <- true;
+			in_anoestrus <- false;
+			state <- "in heat";
+			latecomer <- false;
+			/*write name + " -> en_chaleur" + debut_chaleur;*/
 			number_of_ewelamb_starting_heating <- number_of_ewelamb_starting_heating + 1;
 		}
 
