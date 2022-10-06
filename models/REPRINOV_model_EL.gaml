@@ -1116,10 +1116,7 @@ species ewe parent: sheep {
 	(current_date =  my_farmer.ewe_lamb_start_mating_date add_days second_chance_at_first_heat) {
 		
 		/*It seems that ewe lambs come into heat less in the spring than in the summer, but this value must be adjusted according to field observations */
-		if (current_date.month between (6, 9) ) {
-			first_heat <- flip(0.8);
-		}
-
+	
 		if ((current_date.month = 9 or current_date.month = 10 or current_date.month = 11 or current_date.month = 12) and (current_date = my_farmer.ewe_lamb_start_mating_date add_days day_of_first_heat_ewelamb)) {
 			first_heat <- flip(0.95);
 		}
@@ -1607,8 +1604,6 @@ species farmer {
 			if (days_since_lambing < 0) {
 				days_since_lambing <- 0;
 			}
-
-			days_since_lambing <- int((my_farmer.ram_introduction - last(lambing_date)) / #day);
 		}
 
 		ewe_lamb_start_mating_date <- ewe_lamb_start_mating_date add_years 1;
