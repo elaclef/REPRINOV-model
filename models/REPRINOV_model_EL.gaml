@@ -13,6 +13,12 @@ global {
 	string scenario <- "scenar1";
 	bool transition <- false;
 	bool end_simulation <- false;
+	float genetic_gain_for_milk_prod2 <- -0.09;
+	float genetic_gain_for_MFC2 <- -0.26;
+	float genetic_gain_for_MPC2 <- -0.21;
+	float genetic_gain_for_milk_prod3 <- 0.21;// 10+4L
+	float genetic_gain_for_MFC3 <-0.6;
+	float genetic_gain_for_MPC3 <-0.49;
 	///////////////////////////////////////////	
 	///////////////TRANSITION/////////////////	
 	reflex scenario_transition {
@@ -138,6 +144,7 @@ global {
 				milk_prod[lact_num] <- [];
 				MFC_init_value <- 60.7;
 				MPC_init_value <- 45.9;
+				born_from_AI<- true;
 			}
 
 			create ewe number: young_batch_size {
@@ -159,6 +166,7 @@ global {
 				milk_prod[lact_num] <- [0];
 				MFC_init_value <- 60.7;
 				MPC_init_value <- 45.9;
+				born_from_AI<- true;
 			}
 
 			flock_size <- length(my_ewes);
@@ -174,6 +182,8 @@ global {
 				father_index <- rnd(80, 120);
 				state <- "male";
 				renew <- false;
+				born_from_AI<- true;
+				
 			}
 
 			nb_renew_ram <- int(1 / 3 * length(ram));
@@ -808,11 +818,12 @@ species sheep {
 	bool weaned <- false;
 	bool culling_for_age <- false; /*Assigned to ewes or rams selected for culling because of their age*/
 	bool renew <- false;
-	bool lamb_from_AI <- false; //young from AI
+	bool born_from_AI <- false; //young from AI
 	svg_file icon;
 	farmer my_farmer;
 	string father_name;
 	string nutrition_state;
+	
 
 	reflex aging when: cycle != 0 and ((current_date = my_farmer.ram_introduction) or (current_date = my_farmer.sponge)) {
 		age <- age + 1;
@@ -1001,9 +1012,7 @@ species ewe parent: sheep {
 	float besPDI_gest;
 	float bes_UFL_tot;
 	float bes_PDI_tot;
-	float weight_gain_of_youngs_during_suck <- 350.0 with_precision 2; //weight gain of the litter during the first 3 weeks of lactation (in g/d)
 	int lit_size <- 1; // initial litter size=1 by default and then changes during gestation with the proba of having on other litter size
-	int foetusweigth <- 7; //Average litter weight for a 70kg Lacaune ewe with 2 lambs (INRAtion)
 	int number_of_milking_days;
 	int gestating_week;
 	int week_before_lambing;
@@ -1311,7 +1320,7 @@ species ewe parent: sheep {
 
 	}
 
-	reflex lambing when: (gestating and (current_date = (start_gestation add_days gestation_duration))) { /*add_days permet d'ajouter des jours,5mois=150j environ */
+	reflex lambing when: (gestating and (current_date = (start_gestation add_days gestation_duration))) { /*add_days allows to add the gestation duration 5 month= about 150 days */
 		gave_birth <- flip(easy_lambing);
 		if (gave_birth) {
 			lambing_count_day <- lambing_count_day + 1;
@@ -1351,19 +1360,37 @@ species ewe parent: sheep {
 				create ewe number: lit_size with: [age::-1] {
 					my_farmer <- myself.my_farmer;
 					my_farmer.my_ewes << self;
-					ewe_initial_milk_prod <- myself.ewe_initial_milk_prod;
-					ewelamb_initial_milk_prod <- myself.ewelamb_initial_milk_prod;
-					MFC_init_value <- myself.MFC_init_value;
-					MPC_init_value <- myself.MPC_init_value;
 					if (myself.AI_lambs) {
-						number_of_youngs_from_AI <- number_of_youngs_from_AI + 1;
-						lamb_from_AI <- true;
+							if (myself.born_from_AI) {
+						
 						ewe_initial_milk_prod <- myself.ewe_initial_milk_prod + genetic_gain_for_milk_prod; //Evolution of the milk prod over the AIs
 						ewelamb_initial_milk_prod <- myself.ewelamb_initial_milk_prod + genetic_gain_for_milk_prod; //Evolution of the milk prod over the AIs
 						MFC_init_value <- myself.MFC_init_value + genetic_gain_for_MFC;
 						MPC_init_value <- myself.MPC_init_value + genetic_gain_for_MPC;
+					}else{
+						ewe_initial_milk_prod <- myself.ewe_initial_milk_prod + genetic_gain_for_milk_prod3;
+						ewelamb_initial_milk_prod <- myself.ewelamb_initial_milk_prod + genetic_gain_for_milk_prod3; 
+						MFC_init_value <- myself.MFC_init_value + genetic_gain_for_MFC3;
+						MPC_init_value <- myself.MPC_init_value + genetic_gain_for_MPC3;
 					}
-
+					number_of_youngs_from_AI <- number_of_youngs_from_AI + lit_size;
+					born_from_AI <- true;
+					}
+					if (not myself.AI_lambs) {
+						if (myself.born_from_AI) {
+						ewe_initial_milk_prod <- myself.ewe_initial_milk_prod + genetic_gain_for_milk_prod2;
+						ewelamb_initial_milk_prod <- myself.ewelamb_initial_milk_prod + genetic_gain_for_milk_prod2; 
+						MFC_init_value <- myself.MFC_init_value + genetic_gain_for_MFC2;
+						MPC_init_value <- myself.MPC_init_value + genetic_gain_for_MPC2;
+						
+						}else{
+						ewe_initial_milk_prod <- myself.ewe_initial_milk_prod + genetic_gain_for_milk_prod; //Evolution of the milk prod over the AIs
+						ewelamb_initial_milk_prod <- myself.ewelamb_initial_milk_prod + genetic_gain_for_milk_prod; //Evolution of the milk prod over the AIs
+						MFC_init_value <- myself.MFC_init_value + genetic_gain_for_MFC;
+						MPC_init_value <- myself.MPC_init_value + genetic_gain_for_MPC;
+						}
+						born_from_AI <- false;
+						}
 					birth_date <- current_date;
 					BCS <- min(5.0, max(1.0, gauss(2.5, 0.3)));
 					days_since_lambing <- 0;
@@ -1389,7 +1416,7 @@ species ewe parent: sheep {
 					nutrition_state <- "growing_male";
 					if (myself.AI_lambs) {
 						number_of_youngs_from_AI <- number_of_youngs_from_AI + 1;
-						lamb_from_AI <- true;
+						born_from_AI <- true;
 					}
 
 					nb_of_male_born <- nb_of_male_born + 1;
@@ -2042,14 +2069,14 @@ species farmer {
 		write "nb death before weaning:" + young_mortality;
 		write "nb young sold: " + sales_youngs;
 		if (AI and ewe_autorenewal) {
-			ewe_renewal_rate_from_AI <- length(ewe where (each.renew and each.lamb_from_AI)) / length(ewe where each.renew); ///females renewal
+			ewe_renewal_rate_from_AI <- length(ewe where (each.renew and each.born_from_AI)) / length(ewe where each.renew); ///females renewal
 
 		} else {
 			ewe_renewal_rate_from_AI <- 0.0;
 		}
 
 		if (AI and ram_autorenewal) {
-			ram_renewal_rate_from_AI <- length(ram where (each.renew and each.lamb_from_AI)) / length(ram where (each.renew)); ///males renewal
+			ram_renewal_rate_from_AI <- length(ram where (each.renew and each.born_from_AI)) / length(ram where (each.renew)); ///males renewal
 
 		} else {
 			ram_renewal_rate_from_AI <- 0.0;
